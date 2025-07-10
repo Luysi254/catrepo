@@ -167,112 +167,112 @@ public class PipeLevelManager : MonoBehaviour
     }
 
     // ====================== 调试面板实现 ======================
-    void OnGUI()
-    {
-        if (!showDebugPanel) return;
+    /* void OnGUI()
+     {
+         if (!showDebugPanel) return;
 
-        // 调试面板背景
-        GUI.Box(new Rect(10, 10, 400, 250), "管道拼图调试面板");
+         // 调试面板背景
+         GUI.Box(new Rect(10, 10, 400, 250), "管道拼图调试面板");
 
-        // 滚动视图
-        scrollPosition = GUI.BeginScrollView(
-            new Rect(15, 40, 390, 200),
-            scrollPosition,
-            new Rect(0, 0, 370, allPipes.Count * 70)
-        );
+         // 滚动视图
+         scrollPosition = GUI.BeginScrollView(
+             new Rect(15, 40, 390, 200),
+             scrollPosition,
+             new Rect(0, 0, 370, allPipes.Count * 70)
+         );
 
-        // 管道状态显示
-        for (int i = 0; i < allPipes.Count; i++)
-        {
-            PipePiece pipe = allPipes[i];
-            float yPos = i * 70;
+         // 管道状态显示
+         for (int i = 0; i < allPipes.Count; i++)
+         {
+             PipePiece pipe = allPipes[i];
+             float yPos = i * 70;
 
-            // 管道标题
-            GUI.Label(new Rect(10, yPos, 200, 30),
-                $"{i + 1}. {pipe.gameObject.name} ({pipe.pipeType})", debugStyle);
+             // 管道标题
+             GUI.Label(new Rect(10, yPos, 200, 30),
+                 $"{i + 1}. {pipe.gameObject.name} ({pipe.pipeType})", debugStyle);
 
-            // 管道状态
-            string state = GetPipeState(pipe);
-            GUI.Label(new Rect(220, yPos, 150, 30), state, debugStyle);
+             // 管道状态
+             string state = GetPipeState(pipe);
+             GUI.Label(new Rect(220, yPos, 150, 30), state, debugStyle);
 
-            // 连接状态
-            GUI.Label(new Rect(10, yPos + 25, 350, 30),
-                $"连接状态: {GetConnectionStatus(pipe)}", debugStyle);
+             // 连接状态
+             GUI.Label(new Rect(10, yPos + 25, 350, 30),
+                 $"连接状态: {GetConnectionStatus(pipe)}", debugStyle);
 
-            // 旋转状态
-            if (correctRotations.ContainsKey(pipe.gameObject.name))
-            {
-                Vector3 currentRotation = pipe.transform.eulerAngles;
-                Vector3 correctRotation = correctRotations[pipe.gameObject.name];
-                bool isCorrect = ApproximatelyEqual(currentRotation, correctRotation);
+             // 旋转状态
+             if (correctRotations.ContainsKey(pipe.gameObject.name))
+             {
+                 Vector3 currentRotation = pipe.transform.eulerAngles;
+                 Vector3 correctRotation = correctRotations[pipe.gameObject.name];
+                 bool isCorrect = ApproximatelyEqual(currentRotation, correctRotation);
 
-                GUI.Label(new Rect(10, yPos + 45, 350, 30),
-                    $"旋转状态: {currentRotation} / 正确: {correctRotation} <color={(isCorrect ? "green" : "red")}>{(isCorrect ? "✔" : "✖")}</color>", debugStyle);
-            }
-        }
+                 GUI.Label(new Rect(10, yPos + 45, 350, 30),
+                     $"旋转状态: {currentRotation} / 正确: {correctRotation} <color={(isCorrect ? "green" : "red")}>{(isCorrect ? "✔" : "✖")}</color>", debugStyle);
+             }
+         }
 
-        GUI.EndScrollView();
+         GUI.EndScrollView();
 
-        // 整体状态
-        string puzzleState = IsPuzzleComplete() ?
-            "<color=green>拼图已完成</color>" :
-            "<color=red>拼图未完成</color>";
-        GUI.Label(new Rect(15, 250, 380, 30), puzzleState, debugStyle);
+         // 整体状态
+         string puzzleState = IsPuzzleComplete() ?
+             "<color=green>拼图已完成</color>" :
+             "<color=red>拼图未完成</color>";
+         GUI.Label(new Rect(15, 250, 380, 30), puzzleState, debugStyle);
 
-        // 显示/隐藏调试面板按钮
-        if (GUI.Button(new Rect(10, Screen.height - 40, 150, 30),
-            showDebugPanel ? "隐藏调试面板" : "显示调试面板"))
-        {
-            showDebugPanel = !showDebugPanel;
-        }
-    }
+         // 显示/隐藏调试面板按钮
+         if (GUI.Button(new Rect(10, Screen.height - 40, 150, 30),
+             showDebugPanel ? "隐藏调试面板" : "显示调试面板"))
+         {
+             showDebugPanel = !showDebugPanel;
+         }
+     }
 
-    // 获取管道状态文本
-    private string GetPipeState(PipePiece pipe)
-    {
-        switch (pipe.pipeType)
-        {
-            case PipePiece.PipeType.Entrance:
-                return "<color=cyan>入口管道</color>";
+     // 获取管道状态文本
+     private string GetPipeState(PipePiece pipe)
+     {
+         switch (pipe.pipeType)
+         {
+             case PipePiece.PipeType.Entrance:
+                 return "<color=cyan>入口管道</color>";
 
-            case PipePiece.PipeType.Exit:
-                bool exitCorrect = correctRotations.ContainsKey(pipe.gameObject.name) &&
-                                 ApproximatelyEqual(pipe.transform.eulerAngles, correctRotations[pipe.gameObject.name]);
-                return $"<color={(exitCorrect ? "green" : "red")}>出口管道</color>";
+             case PipePiece.PipeType.Exit:
+                 bool exitCorrect = correctRotations.ContainsKey(pipe.gameObject.name) &&
+                                  ApproximatelyEqual(pipe.transform.eulerAngles, correctRotations[pipe.gameObject.name]);
+                 return $"<color={(exitCorrect ? "green" : "red")}>出口管道</color>";
 
-            default:
-                bool connected = pipe.AreAllSocketsConnected();
-                bool rotationCorrect = correctRotations.ContainsKey(pipe.gameObject.name) &&
-                                     ApproximatelyEqual(pipe.transform.eulerAngles, correctRotations[pipe.gameObject.name]);
+             default:
+                 bool connected = pipe.AreAllSocketsConnected();
+                 bool rotationCorrect = correctRotations.ContainsKey(pipe.gameObject.name) &&
+                                      ApproximatelyEqual(pipe.transform.eulerAngles, correctRotations[pipe.gameObject.name]);
 
-                if (!connected) return "<color=orange>中间管道(未连接)</color>";
-                if (!rotationCorrect) return "<color=yellow>中间管道(旋转错误)</color>";
-                return "<color=green>中间管道</color>";
-        }
-    }
+                 if (!connected) return "<color=orange>中间管道(未连接)</color>";
+                 if (!rotationCorrect) return "<color=yellow>中间管道(旋转错误)</color>";
+                 return "<color=green>中间管道</color>";
+         }
+     }
 
-    // 获取连接状态文本
-    private string GetConnectionStatus(PipePiece pipe)
-    {
-        if (pipe.socketCache == null || pipe.socketCache.Count == 0)
-            return "<color=red>没有检测点</color>";
+     // 获取连接状态文本
+     private string GetConnectionStatus(PipePiece pipe)
+     {
+         if (pipe.socketCache == null || pipe.socketCache.Count == 0)
+             return "<color=red>没有检测点</color>";
 
-        List<string> statuses = new List<string>();
-        foreach (SocketDetector socket in pipe.socketCache)
-        {
-            if (pipe.pipeType == PipePiece.PipeType.Entrance &&
-                socket.gameObject.name == "Socket_Start")
-            {
-                statuses.Add("<color=cyan>起点(固定)</color>");
-                continue;
-            }
+         List<string> statuses = new List<string>();
+         foreach (SocketDetector socket in pipe.socketCache)
+         {
+             if (pipe.pipeType == PipePiece.PipeType.Entrance &&
+                 socket.gameObject.name == "Socket_Start")
+             {
+                 statuses.Add("<color=cyan>起点(固定)</color>");
+                 continue;
+             }
 
-            statuses.Add(socket.isConnected ?
-                $"<color=green>{socket.name}</color>" :
-                $"<color=red>{socket.name}断开</color>");
-        }
+             statuses.Add(socket.isConnected ?
+                 $"<color=green>{socket.name}</color>" :
+                 $"<color=red>{socket.name}断开</color>");
+         }
 
-        return string.Join(" | ", statuses);
-    }
-    // ====================== 调试面板结束 ======================
+         return string.Join(" | ", statuses);
+     }
+     // ====================== 调试面板结束 ======================*/
 }

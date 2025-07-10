@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class yaoshi : MonoBehaviour
@@ -11,28 +10,23 @@ public class yaoshi : MonoBehaviour
     [Tooltip("切换到KeyGetMask画板的延迟时间")]
     public float transitionDelay = 1f;
 
-    [Header("目标画板")]
-    public GameObject keyGetMaskCanvas; // 拖拽KeyGetMask画板到这里
-
+    private GameObject keyGetMaskCanvas;
     private bool collected = false;
-    void Start()
-    {
-        if (keyGetMaskCanvas == null)
-        {
-            // 通过名称查找画板（确保画板在场景中且名称唯一）
-            keyGetMaskCanvas = GameObject.Find("KeyGetMask");
-            // 或者通过标签查找
-            // keyGetMaskCanvas = GameObject.FindGameObjectWithTag("KeyGetMask");
-        }
-    }
+
     void Awake()
     {
-        // 初始化位置（根据截图中的管道位置调整）
+        // 保持预制体初始位置（根据截图中的数值）
         transform.localPosition = new Vector3(0.95f, -0.23f, 0f);
         transform.localEulerAngles = new Vector3(0f, 0f, 0f);
         transform.localScale = new Vector3(0.00943f, 0.00943f, 0.00943f);
 
-        // 确保有碰撞体
+        // 确保物理组件存在（匹配截图中的Rigidbody和Collider）
+        if (GetComponent<Rigidbody>() == null)
+        {
+            var rb = gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = true; // 防止物理影响
+        }
+
         if (GetComponent<Collider>() == null)
         {
             var collider = gameObject.AddComponent<BoxCollider>();
@@ -40,32 +34,31 @@ public class yaoshi : MonoBehaviour
         }
     }
 
-    void Update()
+    void Start()
     {
-        if (Input.GetMouseButtonDown(0))
+        // 自动查找画板（匹配截图中的"KeyGetMask"对象）
+        keyGetMaskCanvas = GameObject.Find("KeyGetMask");
+
+        // 备用查找方案（如果画板在Canvas子物体中）
+        if (keyGetMaskCanvas == null)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
-            {
-                if (hit.collider.gameObject == gameObject)
-                {
-                    Debug.Log("钥匙被点击"); // 验证点击事件
-                    StartCoroutine(PickupKey());
-                }
-            }
+            Transform canvas = GameObject.Find("Canvas")?.transform;
+            if (canvas != null) keyGetMaskCanvas = canvas.Find("KeyGetMask")?.gameObject;
         }
-        // 增强点击检测
-        if (Input.GetMouseButtonDown(0) && !collected)
+
+        if (keyGetMaskCanvas != null)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, 10f))
-            {
-                if (hit.collider.gameObject == gameObject)
-                {
-                    StartCoroutine(PickupKey());
-                }
-            }
+            keyGetMaskCanvas.SetActive(false); // 初始隐藏
         }
+        else
+        {
+            Debug.LogError("自动查找失败！请确认：1.画板命名为'KeyGetMask' 2.画板存在于场景中");
+        }
+    }
+
+    void OnMouseDown()
+    {
+        if (!collected) StartCoroutine(PickupKey());
     }
 
     IEnumerator PickupKey()
@@ -73,8 +66,8 @@ public class yaoshi : MonoBehaviour
         collected = true;
 
         // 缩放消失动画
-        float timer = 0;
         Vector3 originalScale = transform.localScale;
+        float timer = 0;
         while (timer < transitionDelay)
         {
             timer += Time.deltaTime;
@@ -82,23 +75,21 @@ public class yaoshi : MonoBehaviour
             yield return null;
         }
 
-        // 保存状态并切换到KeyGetMask画板
-        PlayerPrefs.SetInt("PipePuzzleCompleted", 1);
-
-        // 激活KeyGetMask画板（确保它已禁用）
+        // 安全激活画板
         if (keyGetMaskCanvas != null)
         {
             keyGetMaskCanvas.SetActive(true);
+            PlayerPrefs.SetInt("PipePuzzleCompleted", 1);
         }
         else
         {
-            Debug.LogError("KeyGetMask画板未分配！请在Inspector中拖拽KeyGetMask画板到脚本。");
+            Debug.LogWarning("画板激活失败，但继续执行销毁");
         }
 
         Destroy(gameObject);
     }
 
-    // 调试用可视化
+    // 调试可视化（可选）
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
