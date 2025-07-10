@@ -7,12 +7,24 @@ public class yaoshi : MonoBehaviour
     public enum KeyType { General, PipePuzzle }
     public KeyType keyType = KeyType.PipePuzzle;
 
-    [Header("场景设置")]
-    [Tooltip("切换到Beginning场景的延迟时间")]
+    [Header("UI设置")]
+    [Tooltip("切换到KeyGetMask画板的延迟时间")]
     public float transitionDelay = 1f;
 
-    private bool collected = false;
+    [Header("目标画板")]
+    public GameObject keyGetMaskCanvas; // 拖拽KeyGetMask画板到这里
 
+    private bool collected = false;
+    void Start()
+    {
+        if (keyGetMaskCanvas == null)
+        {
+            // 通过名称查找画板（确保画板在场景中且名称唯一）
+            keyGetMaskCanvas = GameObject.Find("KeyGetMask");
+            // 或者通过标签查找
+            // keyGetMaskCanvas = GameObject.FindGameObjectWithTag("KeyGetMask");
+        }
+    }
     void Awake()
     {
         // 初始化位置（根据截图中的管道位置调整）
@@ -70,9 +82,19 @@ public class yaoshi : MonoBehaviour
             yield return null;
         }
 
-        // 保存状态并切换场景
+        // 保存状态并切换到KeyGetMask画板
         PlayerPrefs.SetInt("PipePuzzleCompleted", 1);
-        SceneManager.LoadScene("Beginning");
+
+        // 激活KeyGetMask画板（确保它已禁用）
+        if (keyGetMaskCanvas != null)
+        {
+            keyGetMaskCanvas.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError("KeyGetMask画板未分配！请在Inspector中拖拽KeyGetMask画板到脚本。");
+        }
+
         Destroy(gameObject);
     }
 

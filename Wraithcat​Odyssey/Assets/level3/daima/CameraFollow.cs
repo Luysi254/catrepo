@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
-public class CameraFollow : MonoBehaviour
+public class camerafollow : MonoBehaviour
 {
     [Header("基础跟随设置")]
     [Tooltip("要跟随的目标对象（通常是玩家角色）")]
