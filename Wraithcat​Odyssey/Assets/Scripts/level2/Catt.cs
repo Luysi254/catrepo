@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Catt : MonoBehaviour
 {
+    // 坠落高度阈值
+    public float fallDeathHeight = -15f;
     // 移动参数
     public float moveSpeed = 5f;
     public float rotationSpeed = 200f;
@@ -60,6 +63,24 @@ public class Catt : MonoBehaviour
         {
             ToggleForm();
         }
+        CheckFallDeath();
+    }
+    void CheckFallDeath()
+    {
+        if (transform.position.y < fallDeathHeight)
+        {
+            ReloadScene();
+        }
+    }
+
+    // 新增方法：重新加载当前场景
+    void ReloadScene()
+    {
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        SceneManager.LoadScene(currentSceneIndex);
+
+        // 或者直接使用场景名称（更稳定）
+        // SceneManager.LoadScene("你的场景名称");
     }
     void CheckGroundStatus()
     {
