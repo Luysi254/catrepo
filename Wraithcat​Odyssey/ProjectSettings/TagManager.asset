@@ -3,12 +3,16 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Background
+  - Road
+  - tengman
+  - qianjing
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - road
   - Water
   - UI
   - 
